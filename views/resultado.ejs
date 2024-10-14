@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Resultado de la Búsqueda</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="inicio"><a href="/">Inicio</a></div>
+    <h1>Resultado de la Búsqueda</h1>
+
+    <% if (movies.length === 0 && actors.length === 0 && directors.length === 0)
+    { %>
+    <p>No hay resultados.</p>
+    <% } else { %> <% if (movies.length > 0) { %>
+    <h2>Películas</h2>
+    <ul>
+      <% movies.forEach((movie) => { %>
+      <li><a href="/pelicula/<%= movie.movie_id %>"><%= movie.title %></a></li>
+      <% }); %>
+    </ul>
+    <% } %> <% if (actors.length > 0) { %>
+    <h2>Actores</h2>
+    <ul>
+      <% let lastActorId = null; %>
+      <!-- Variable de control para el actor -->
+      <% actors.forEach(function(actor) { %> <% if (actor.person_id !==
+      lastActorId) { %>
+      <!-- Mostrar el nombre del actor solo la primera vez -->
+      <li>
+        <a href="/actor/<%= actor.person_id %>"><%= actor.person_name %></a>
+        actuó en:
+      </li>
+      <% lastActorId = actor.person_id; %>
+      <!-- Actualizar el ID del actor -->
+      <% } %>
+      <!-- Mostrar cada película del actor -->
+      <li style="margin-left: 20px">
+        <a href="/pelicula/<%= actor.movie_id %>"><%= actor.title %></a>
+      </li>
+      <% }); %>
+    </ul>
+    <% } %> <% if (directors.length > 0) { %>
+    <h2>Directores</h2>
+    <ul>
+      <% let lastDirectorId = null; %>
+      <!-- Variable de control para el director -->
+      <% directors.forEach(function(director) { %> <% if (director.person_id !==
+      lastDirectorId) { %>
+      <!-- Mostrar el nombre del director solo la primera vez -->
+      <li>
+        <a href="/director/<%= director.person_id %>"
+          ><%= director.person_name %></a
+        >
+        dirigió:
+      </li>
+      <% lastDirectorId = director.person_id; %>
+      <!-- Actualizar el ID del director -->
+      <% } %>
+      <!-- Mostrar cada película del director -->
+      <li style="margin-left: 20px">
+        <a href="/pelicula/<%= director.movie_id %>"><%= director.title %></a>
+      </li>
+      <% }); %>
+    </ul>
+    <% } %> <% } %>
+  </body>
+</html>

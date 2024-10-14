@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= movie.title %></title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="inicio"><a href="/">Inicio</a></div>
+    <h1><%= movie.title %></h1>
+    <h3>Fecha: <%= movie.release_date %></h3>
+    <h3>Dirigida por:</h3>
+    <ul>
+      <% movie.directors.forEach(function(director) { %>
+      <li>
+        <a href="/director/<%= director.crew_member_id %>"
+          ><%= director.crew_member_name %></a
+        >
+      </li>
+      <% }); %>
+    </ul>
+    <h3>Escrita por:</h3>
+    <ul>
+      <% movie.writers.forEach(function(writer) { %>
+      <li><%= writer.crew_member_name %></li>
+      <% }); %>
+    </ul>
+    <h3>Argumento:</h3>
+    <div id="overview"><p><%= movie.overview %></p></div>
+    <h3>Elenco:</h3>
+    <ul>
+      <% movie.cast .sort(function(a, b) { return a.cast_order - b.cast_order })
+      .forEach(function(actor) { %>
+      <li>
+        <a href="/actor/<%= actor.actor_id %>"><%= actor.actor_name %></a> - <%=
+        actor.character_name %>
+      </li>
+      <% }); %>
+    </ul>
+    <h3>Crew:</h3>
+    <ul>
+      <% movie.crew.forEach(function(crewMember) { %>
+      <li>
+        <%= crewMember.crew_member_name %> - <%= crewMember.department_name %>
+        (<%= crewMember.job %>)
+      </li>
+      <% }); %>
+    </ul>
+    <h3>Otra información:</h3>
+    <ul>
+      <li>
+        <p>Duración: <%= movie.runtime %> minutos</p>
+      </li>
+      <li>
+        <p>Presupuesto: $<%= movie.budget.toLocaleString() %></p>
+      </li>
+      <li>
+        <p>Ingresos: $<%= movie.revenue.toLocaleString() %></p>
+      </li>
+      <li>
+        <p>Popularidad: <%= movie.popularity.toLocaleString() %></p>
+      </li>
+      <li>
+        <p>Calificación: <%= movie.vote_average %></p>
+      </li>
+      <li>
+        <p>Votos: <%= movie.vote_count %></p>
+      </li>
+      <li>
+        <p>Tagline: <%= movie.tagline %></p>
+      </li>
+      <li>
+        <% if (movie.homepage) { %>
+        <p>
+          <a href="<%= movie.homepage %>" target="blank">Sitio web</a>
+        </p>
+        <% } else { %>
+        <p>Sin sitio web</p>
+        <% } %>
+      </li>
+      <li>
+        <p>Estado: <%= movie.movie_status %></p>
+      </li>
+    </ul>
+
+    <p></p>
+  </body>
+</html>
