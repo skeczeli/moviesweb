@@ -30,11 +30,11 @@ app.get("/buscar", (req, res) => {
                         JOIN movie ON movie_cast.movie_id = movie.movie_id
                         WHERE person.person_name LIKE ?
                         ORDER BY person.person_name ASC, movie.title ASC`;
-  const queryDirectors = `SELECT distinct person.person_id, person.person_name, movie.movie_id, movie.title 
+  const queryDirectors = `SELECT distinct person.person_id, person.person_name, movie.movie_id, movie.title
                           FROM person 
                           JOIN movie_crew ON person.person_id = movie_crew.person_id
                           JOIN movie ON movie_crew.movie_id = movie.movie_id
-                          WHERE person.person_name LIKE ?`;
+                          WHERE person.person_name LIKE ? and job = 'Director'`;
 
   const searchValue = [`%${searchTerm}%`];
 
