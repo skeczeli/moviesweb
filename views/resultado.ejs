@@ -12,15 +12,19 @@
     <% if (movies.length === 0 && actors.length === 0 && directors.length === 0)
     { %>
     <p>No hay resultados.</p>
-    <% } else { %> <% if (movies.length > 0) { %>
+    <% } else { %>
     <h2>Películas</h2>
+    <% if (movies.length > 0) { %>
     <ul>
       <% movies.forEach((movie) => { %>
       <li><a href="/pelicula/<%= movie.movie_id %>"><%= movie.title %></a></li>
       <% }); %>
     </ul>
-    <% } %> <% if (actors.length > 0) { %>
+    <% } else { %>
+    <p>No hay resultados.</p>
+    <% } %>
     <h2>Actores</h2>
+    <% if (actors.length > 0) { %>
     <ul>
       <% let lastActorId = null; %>
       <!-- Variable de control para el actor -->
@@ -40,8 +44,11 @@
       </li>
       <% }); %>
     </ul>
-    <% } %> <% if (directors.length > 0) { %>
+    <% } else { %>
+    <p>No hay resultados.</p>
+    <% } %>
     <h2>Directores</h2>
+    <% if (directors.length > 0) { %>
     <ul>
       <% let lastDirectorId = null; %>
       <!-- Variable de control para el director -->
@@ -63,6 +70,8 @@
       </li>
       <% }); %>
     </ul>
+    <% } else { %>
+    <p>No hay resultados.</p>
     <% } %> <% } %>
   </body>
 </html>
