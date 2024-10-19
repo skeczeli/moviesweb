@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Resultados de la Búsqueda por Palabra Clave</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      #content {
+        margin: 0 auto;
+        max-width: 800px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="inicio"><a href="/">Inicio</a></div>
+    <div id="content">
+      <h1>Resultados de la búsqueda por palabra clave</h1>
+
+      <% if (movies.length > 0) { %>
+      <ul>
+        <% movies.forEach(function(movie) { %>
+        <li>
+          <a href="/pelicula/<%= movie.movie_id %>"
+            ><strong><%= movie.title %></strong></a
+          >
+          (<%= movie.release_date %>)
+          <p><%= movie.overview %></p>
+        </li>
+        <% }) %>
+      </ul>
+      <% } else { %>
+      <p>No se encontraron películas para esta palabra clave.</p>
+      <% } %>
+    </div>
+  </body>
+</html>

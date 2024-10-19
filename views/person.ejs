@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Películas de <%= personName %></title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="inicio"><a href="/">Inicio</a></div>
+    <h1>Películas de <%= personName %></h1>
+
+    <% if (actorMovies.length === 0 && directorMovies.length === 0) { %>
+    <p>No hay resultados para <%= personName %>.</p>
+    <% } else { %>
+    <h2>Películas como actor</h2>
+    <% if (actorMovies.length > 0) { %>
+    <ul>
+      <% actorMovies.forEach((movie) => { %>
+      <li><a href="/pelicula/<%= movie.movie_id %>"><%= movie.title %></a></li>
+      <% }); %>
+    </ul>
+    <% } %>
+    <h2>Películas como director</h2>
+    <% if (directorMovies.length > 0) { %>
+    <ul>
+      <% directorMovies.forEach((movie) => { %>
+      <li><a href="/pelicula/<%= movie.movie_id %>"><%= movie.title %></a></li>
+      <% }); %>
+    </ul>
+    <% } %> <% } %>
+  </body>
+</html>

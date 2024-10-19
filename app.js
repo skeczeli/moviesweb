@@ -70,6 +70,44 @@ app.get("/buscar", (req, res) => {
   });
 });
 
+app.get("/buscarKeyword", (req, res) => {
+  const searchTerm = req.query.q;
+
+  // Consulta para buscar películas por palabra clave
+  const queryMoviesByKeyword = `
+    SELECT distinct movie.movie_id, movie.title, movie.release_date
+    FROM movie 
+    JOIN movie_keywords ON movie.movie_id = movie_keywords.movie_id
+    JOIN keyword ON movie_keywords.keyword_id = keyword.keyword_id
+    WHERE keyword.keyword_name LIKE ?`;
+
+  const searchValue = [`%${searchTerm}%`];
+
+  // Ejecutar la consulta para buscar películas relacionadas con la palabra clave
+  db.all(queryMoviesByKeyword, searchValue, (err, movies) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send("Error en la búsqueda de películas.");
+      return;
+    }
+
+    // Verificar si se encontraron películas
+    if (movies.length === 0) {
+      res
+        .status(404)
+        .send(
+          "No se encontraron películas relacionadas con esta palabra clave."
+        );
+      return;
+    }
+
+    // Renderizar los resultados en la vista
+    res.render("keywords_result", {
+      movies: movies,
+    });
+  });
+});
+
 // Ruta para la página de datos de una película particular
 app.get("/pelicula/:id", (req, res) => {
   const movieId = req.params.id;
@@ -77,22 +115,56 @@ app.get("/pelicula/:id", (req, res) => {
   // Consulta SQL para obtener los datos de la película, elenco y crew
   const query = `
     SELECT
-      movie.*,
-      actor.person_name as actor_name,
-      actor.person_id as actor_id,
-      crew_member.person_name as crew_member_name,
-      crew_member.person_id as crew_member_id,
-      movie_cast.character_name,
-      movie_cast.cast_order,
-      department.department_name,
-      movie_crew.job
+    movie.*,
+    actor.person_name as actor_name,
+    actor.person_id as actor_id,
+    crew_member.person_name as crew_member_name,
+    crew_member.person_id as crew_member_id,
+    movie_cast.character_name,
+    movie_cast.cast_order,
+    department.department_name,
+    country.country_name AS country_name,
+    GROUP_CONCAT(DISTINCT language.language_name) AS languages,
+    GROUP_CONCAT(DISTINCT genre.genre_name) AS genres,
+    GROUP_CONCAT(DISTINCT production_company.company_name) AS production_companies,
+    movie_crew.job
     FROM movie
     LEFT JOIN movie_cast ON movie.movie_id = movie_cast.movie_id
     LEFT JOIN person as actor ON movie_cast.person_id = actor.person_id
     LEFT JOIN movie_crew ON movie.movie_id = movie_crew.movie_id
     LEFT JOIN department ON movie_crew.department_id = department.department_id
     LEFT JOIN person as crew_member ON crew_member.person_id = movie_crew.person_id
+    LEFT JOIN production_country AS pc ON movie.movie_id = pc.movie_id
+    LEFT JOIN country ON pc.country_id = country.country_id
+    LEFT JOIN movie_languages ON movie.movie_id = movie_languages.movie_id
+    LEFT JOIN language ON movie_languages.language_id = language.language_id
+    LEFT JOIN movie_genres ON movie.movie_id = movie_genres.movie_id
+    LEFT JOIN genre ON movie_genres.genre_id = genre.genre_id
+    LEFT JOIN movie_company ON movie.movie_id = movie_company.movie_id
+    LEFT JOIN production_company ON movie_company.company_id = production_company.company_id
     WHERE movie.movie_id = ?
+    GROUP BY movie.movie_id, 
+         movie.title, 
+         movie.budget, 
+         movie.homepage, 
+         movie.overview, 
+         movie.popularity, 
+         movie.release_date, 
+         movie.revenue, 
+         movie.runtime, 
+         movie.movie_status, 
+         movie.tagline, 
+         movie.vote_average, 
+         movie.vote_count, 
+         actor.person_name, 
+         actor.person_id, 
+         crew_member.person_name, 
+         crew_member.person_id, 
+         movie_cast.character_name, 
+         movie_cast.cast_order, 
+         department.department_name, 
+         country.country_name, 
+         movie_crew.job;
   `;
 
   // Ejecutar la consulta
@@ -117,6 +189,10 @@ app.get("/pelicula/:id", (req, res) => {
         vote_count: rows[0].vote_count,
         homepage: rows[0].homepage,
         tagline: rows[0].tagline,
+        movie_language: rows[0].languages,
+        country_name: rows[0].country_name,
+        genres: rows[0].genres,
+        production_companies: rows[0].production_companies,
         movie_status: rows[0].movie_status,
         directors: [],
         writers: [],
@@ -232,6 +308,78 @@ app.get("/pelicula/:id", (req, res) => {
 
       res.render("pelicula", { movie: movieData });
     }
+  });
+});
+
+// Ruta para manejar actores y directores por su ID
+app.get("/person/:id", (req, res) => {
+  const personId = req.params.id;
+
+  // Consulta para obtener películas en las que ha actuado la persona
+  const queryActorMovies = `
+    SELECT movie.movie_id, movie.title, 'actor' AS role
+    FROM movie
+    INNER JOIN movie_cast ON movie.movie_id = movie_cast.movie_id
+    WHERE movie_cast.person_id = ?;
+  `;
+
+  // Consulta para obtener películas que ha dirigido la persona
+  const queryDirectorMovies = `
+    SELECT DISTINCT
+      person.person_name as directorName,
+      movie.*
+    FROM movie
+    INNER JOIN movie_crew ON movie.movie_id = movie_crew.movie_id
+    INNER JOIN person ON person.person_id = movie_crew.person_id
+    WHERE movie_crew.job = 'Director' AND movie_crew.person_id = ?;
+  `;
+
+  // Consulta para obtener el nombre de la persona
+  const queryPersonName = `
+    SELECT person_name 
+    FROM person 
+    WHERE person_id = ?;
+  `;
+
+  // Obtener el nombre de la persona
+  db.get(queryPersonName, [personId], (err, person) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send("Error al cargar la persona.");
+      return;
+    }
+
+    if (!person) {
+      res.status(404).send("Persona no encontrada.");
+      return;
+    }
+
+    const personName = person.person_name;
+
+    // Obtener las películas donde actuó
+    db.all(queryActorMovies, [personId], (err, actorMovies) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Error al cargar las películas del actor.");
+        return;
+      }
+
+      // Obtener las películas donde dirigió
+      db.all(queryDirectorMovies, [personId], (err, directorMovies) => {
+        if (err) {
+          console.error(err);
+          res.status(500).send("Error al cargar las películas del director.");
+          return;
+        }
+
+        // Combinar resultados y renderizar la página
+        res.render("person", {
+          personName,
+          actorMovies,
+          directorMovies,
+        });
+      });
+    });
   });
 });
 

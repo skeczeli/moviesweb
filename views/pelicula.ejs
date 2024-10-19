@@ -12,7 +12,7 @@
     <ul>
       <% movie.directors.forEach(function(director) { %>
       <li>
-        <a href="/director/<%= director.crew_member_id %>"
+        <a href="/person/<%= director.crew_member_id %>"
           ><%= director.crew_member_name %></a
         >
       </li>
@@ -31,8 +31,8 @@
       <% movie.cast .sort(function(a, b) { return a.cast_order - b.cast_order })
       .forEach(function(actor) { %>
       <li>
-        <a href="/actor/<%= actor.actor_id %>"><%= actor.actor_name %></a> - <%=
-        actor.character_name %>
+        <a href="/person/<%= actor.actor_id %>"><%= actor.actor_name %></a> -
+        <%= actor.character_name %>
       </li>
       <% }); %>
     </ul>
@@ -49,6 +49,18 @@
     <ul>
       <li>
         <p>Duración: <%= movie.runtime %> minutos</p>
+      </li>
+      <li>
+        <p>País de origen: <%= movie.country_name%></p>
+      </li>
+      <li>
+        <p>Géneros: <%= movie.genres %></p>
+      </li>
+      <li>
+        <p>Idiomas: <%= movie.movie_language %></p>
+      </li>
+      <li>
+        <p>Compañias de producción: <%= movie.production_companies %></p>
       </li>
       <li>
         <p>Presupuesto: $<%= movie.budget.toLocaleString() %></p>

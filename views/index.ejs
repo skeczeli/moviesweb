@@ -70,14 +70,78 @@
       button[type="submit"]:hover {
         background-color: #0056b3;
       }
+
+      .checkbox-container {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+      }
+
+      input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #0078d4;
+        margin-right: 10px;
+      }
+
+      label[for="keywordSearch"] {
+        font-size: 18px;
+        color: #333333;
+        margin-left: 5px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
     <h1>MovieWeb</h1>
-    <form action="/buscar" method="GET">
-      <input type="text" name="q" placeholder="Buscar película..." />
+    <form id="searchForm" action="/buscar" method="GET">
+      <input
+        type="text"
+        name="q"
+        placeholder="Buscar película..."
+        id="searchBox"
+      />
       <button type="submit">Buscar</button>
+
+      <div class="checkbox-container">
+        <input type="checkbox" id="keywordSearch" />
+        <label for="keywordSearch">Buscar por palabra clave</label>
+      </div>
     </form>
+
+    <script>
+      // Escuchar el cambio del checkbox
+      document
+        .getElementById("keywordSearch")
+        .addEventListener("change", function () {
+          const searchBox = document.getElementById("searchBox");
+
+          if (this.checked) {
+            // Cambiar el placeholder a 'Buscar palabra clave...' si está marcado
+            searchBox.placeholder = "Buscar palabra clave...";
+          } else {
+            // Volver a 'Buscar película...' si no está marcado
+            searchBox.placeholder = "Buscar película...";
+          }
+        });
+
+      // Escuchar el evento submit para cambiar la acción del formulario
+      document
+        .getElementById("searchForm")
+        .addEventListener("submit", function (event) {
+          const isKeywordSearch =
+            document.getElementById("keywordSearch").checked;
+
+          if (isKeywordSearch) {
+            // Cambia la acción para buscar por palabra clave
+            this.action = "/buscarKeyword";
+          } else {
+            // Deja la acción por defecto para buscar películas
+            this.action = "/buscar";
+          }
+        });
+    </script>
     <footer>
       <div class="footerLeft">Alumnos: Sofía Keczeli, Juan Luis Martinó.</div>
       <div class="footerRight">Universidad Austral – 2024</div>
