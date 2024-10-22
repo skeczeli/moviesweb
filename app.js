@@ -91,16 +91,6 @@ app.get("/buscarKeyword", (req, res) => {
       return;
     }
 
-    // Verificar si se encontraron películas
-    if (movies.length === 0) {
-      res
-        .status(404)
-        .send(
-          "No se encontraron películas relacionadas con esta palabra clave."
-        );
-      return;
-    }
-
     // Renderizar los resultados en la vista
     res.render("keywords_result", {
       movies: movies,
