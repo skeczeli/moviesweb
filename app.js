@@ -46,11 +46,10 @@ app.get("/account", (req, res) => {
   const user_id = req.cookies.user_id;
 
   if (!user_id) {
-    // Si no hay user_id en las cookies, redirigir a la página de inicio de sesión
-    return res.redirect("/auth_user");
+    return res.redirect("/auth_user"); // Redirigir si no hay sesión
   }
 
-  // Aquí puedes hacer una consulta a la base de datos para obtener los detalles del usuario
+  // Obtener los detalles del usuario
   db.get(`SELECT * FROM users WHERE user_id = ?`, [user_id], (err, user) => {
     if (err || !user) {
       console.error(err ? err.message : "Usuario no encontrado");
@@ -140,6 +139,30 @@ app.post("/account/edit", (req, res) => {
         // Si no se proporcionó nueva contraseña, redirigir a la página de la cuenta
         res.redirect("/account");
       }
+    }
+  );
+});
+
+app.post("/account/review", (req, res) => {
+  const user_id = req.cookies.user_id; // Obtener el user_id de la cookie
+  const { review, rating, movie_id } = req.body; // Obtener los datos del formulario
+
+  if (!user_id) {
+    return res.redirect("/auth_user"); // Redirigir si el usuario no está autenticado
+  }
+
+  // Insertar la reseña en la base de datos
+  db.run(
+    `INSERT INTO movie_user (user_id, movie_id, rating, review) VALUES (?, ?, ?, ?);`,
+    [user_id, movie_id, rating, review],
+    function (err) {
+      if (err) {
+        console.error(err.message);
+        return res.send("Error al publicar la reseña.");
+      }
+
+      // Recargar la página una vez publicada la reseña
+      res.redirect(`/account`);
     }
   );
 });
@@ -295,6 +318,23 @@ app.get("/buscarKeyword", (req, res) => {
       movies: movies,
     });
   });
+});
+
+app.get("/buscar-pelicula", (req, res) => {
+  const searchTerm = req.query.q;
+
+  // Buscar películas cuyo título coincida con el término de búsqueda
+  db.all(
+    `SELECT movie_id, title FROM movie WHERE title LIKE ? LIMIT 10`, // Limitar a 10 resultados
+    [`%${searchTerm}%`],
+    (err, movies) => {
+      if (err) {
+        console.error(err.message);
+        return res.status(500).json({ error: "Error al buscar películas." });
+      }
+      res.json({ movies }); // Devolver la lista de películas en formato JSON
+    }
+  );
 });
 
 // Ruta para la página de datos de una película particular
