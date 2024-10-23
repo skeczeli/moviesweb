@@ -91,9 +91,24 @@
         margin-left: 5px;
         cursor: pointer;
       }
+      header {
+        margin-bottom: 20px;
+      }
+
+      header a {
+        text-decoration: none;
+        color: #0078d4;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      header a:hover {
+        color: #0056b3;
+      }
     </style>
   </head>
   <body>
+    <header><a href="/users">Users</a></header>
     <h1>MovieWeb</h1>
     <form id="searchForm" action="/buscar" method="GET">
       <input

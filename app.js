@@ -1,12 +1,19 @@
 const express = require("express");
 const sqlite3 = require("sqlite3");
 const ejs = require("ejs");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const bcrypt = require("bcrypt"); // hashing
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Serve static files from the "views" directory
 app.use(express.static("views"));
+
+// Middleware for parsing cookies and form data
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 // Path completo de la base de datos movies.db
 // Por ejemplo 'C:\\Users\\datagrip\\movies.db'
@@ -18,6 +25,198 @@ app.set("view engine", "ejs");
 // Ruta para la página de inicio
 app.get("/", (req, res) => {
   res.render("index");
+});
+
+app.get("/users", (req, res) => {
+  const user_id = req.cookies.user_id;
+
+  // Renderizar la vista de "users" con el valor de user_id (si está presente)
+  res.render("users", { user_id });
+});
+
+app.get("/admin", (req, res) => {
+  res.render("admin");
+});
+
+app.get("/auth_user", (req, res) => {
+  res.render("auth_user"); // Renderiza la vista auth_user.ejs
+});
+
+app.get("/account", (req, res) => {
+  const user_id = req.cookies.user_id;
+
+  if (!user_id) {
+    // Si no hay user_id en las cookies, redirigir a la página de inicio de sesión
+    return res.redirect("/auth_user");
+  }
+
+  // Aquí puedes hacer una consulta a la base de datos para obtener los detalles del usuario
+  db.get(`SELECT * FROM users WHERE user_id = ?`, [user_id], (err, user) => {
+    if (err || !user) {
+      console.error(err ? err.message : "Usuario no encontrado");
+      return res.redirect("/auth_user");
+    }
+
+    // Renderizar la vista de cuenta con los datos del usuario
+    res.render("account", { user });
+  });
+});
+
+app.get("/logout", (req, res) => {
+  res.clearCookie("user_id"); // Elimina la cookie
+  res.redirect("/"); // Redirigir a la página de inicio
+});
+
+app.post("/account/delete", (req, res) => {
+  const user_id = req.cookies.user_id; // Obtener el user_id de la cookie
+
+  if (!user_id) {
+    return res.redirect("/auth_user"); // Redirigir si no hay sesión
+  }
+
+  // Eliminar el usuario de la base de datos
+  db.run(`DELETE FROM users WHERE user_id = ?`, [user_id], function (err) {
+    if (err) {
+      console.error(err.message);
+      return res.send("Error al eliminar la cuenta.");
+    }
+
+    // Eliminar el usuario de la tabla user_login
+    db.run(
+      `DELETE FROM user_login WHERE user_id = ?`,
+      [user_id],
+      function (err) {
+        if (err) {
+          console.error(err.message);
+          return res.send("Error al eliminar los datos de login.");
+        }
+
+        // Borrar la cookie de la sesión
+        res.clearCookie("user_id");
+
+        // Redirigir a la página principal
+        res.redirect("/");
+      }
+    );
+  });
+});
+
+app.post("/account/edit", (req, res) => {
+  const user_id = req.cookies.user_id; // Obtener el user_id de la cookie
+  const { username, name, email, password } = req.body; // Obtener los datos del formulario
+
+  if (!user_id) {
+    return res.redirect("/auth_user"); // Redirigir si el usuario no está autenticado
+  }
+
+  // Actualizar primero el nombre, username y email
+  db.run(
+    `UPDATE users SET username = ?, name = ?, email = ? WHERE user_id = ?;`,
+    [username, name, email, user_id],
+    function (err) {
+      if (err) {
+        console.error(err.message);
+        return res.send("Error al actualizar la cuenta.");
+      }
+
+      // Si se ha proporcionado una nueva contraseña, actualizarla en user_login
+      if (password) {
+        const hashedPassword = bcrypt.hashSync(password, 10); // Hashear la nueva contraseña
+
+        db.run(
+          `UPDATE user_login SET password = ? WHERE user_id = ?;`,
+          [hashedPassword, user_id],
+          function (err) {
+            if (err) {
+              console.error(err.message);
+              return res.send("Error al actualizar la contraseña.");
+            }
+
+            // Redirigir a la página de la cuenta una vez actualizado
+            res.redirect("/account");
+          }
+        );
+      } else {
+        // Si no se proporcionó nueva contraseña, redirigir a la página de la cuenta
+        res.redirect("/account");
+      }
+    }
+  );
+});
+
+// Ruta para manejar login o registro
+app.post("/auth", (req, res) => {
+  const { username, password, action, user_name, email } = req.body;
+
+  if (action === "login") {
+    // Intentar iniciar sesión
+    db.get(
+      `SELECT user_id FROM users WHERE username = ?`,
+      [username],
+      (err, user) => {
+        if (err || !user) {
+          console.error(err ? err.message : "Usuario no encontrado");
+          res.send("Error al iniciar sesión.");
+        } else {
+          db.get(
+            `SELECT * FROM user_login WHERE user_id = ?`,
+            [user.user_id],
+            (err, loginData) => {
+              if (
+                err ||
+                !loginData ||
+                !bcrypt.compareSync(password, loginData.password)
+              ) {
+                res.send("Usuario o contraseña incorrectos.");
+              } else {
+                // Si la autenticación es exitosa, crear una cookie con el user_id
+                res.cookie("user_id", user.user_id, {
+                  httpOnly: true,
+                  maxAge: 3600000,
+                }); // Cookie válida por 1 hora
+                res.redirect("/users");
+              }
+            }
+          );
+        }
+      }
+    );
+  } else if (action === "register") {
+    // Intentar crear cuenta
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    // Insertar en la tabla 'users'
+    db.run(
+      `INSERT INTO users (username, name, email) VALUES (?, ?, ?)`,
+      [username, user_name, email],
+      function (err) {
+        if (err) {
+          console.error(err.message);
+          res.send("Error al crear la cuenta.");
+        } else {
+          // Insertar en 'user_login' usando el user_id recién creado
+          const user_id = this.lastID; // `this.lastID` obtiene el ID del usuario recién creado
+          db.run(
+            `INSERT INTO user_login (user_id, password) VALUES (?, ?)`,
+            [user_id, hashedPassword],
+            (err) => {
+              if (err) {
+                console.error(err.message);
+                res.send("Error al crear el login.");
+              } else {
+                // Iniciar sesión automáticamente
+                res.cookie("user_id", user_id, {
+                  httpOnly: true,
+                  maxAge: 3600000,
+                }); // Cookie válida por 1 hora
+                res.redirect("/users");
+              }
+            }
+          );
+        }
+      }
+    );
+  }
 });
 
 app.get("/buscar", (req, res) => {

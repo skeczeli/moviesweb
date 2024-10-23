@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi Cuenta</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f5f5f5;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #0078d4;
+        color: white;
+        font-weight: 500;
+        padding: 10px 0;
+        font-size: 15px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+      }
+
+      .footerRight {
+        text-align: right;
+        margin-right: 15px;
+      }
+
+      .footerLeft {
+        text-align: left;
+        margin-left: 15px;
+      }
+
+      h1 {
+        font-size: 36px;
+        color: #333333;
+        margin-bottom: 20px;
+      }
+
+      form {
+        text-align: center;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        padding: 10px;
+        width: 300px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      button[type="submit"] {
+        background-color: #0078d4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      button[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+
+      header {
+        margin-bottom: 20px;
+      }
+
+      header a {
+        text-decoration: none;
+        color: #0078d4;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      header a:hover {
+        color: #0056b3;
+      }
+
+      .delete-account {
+        margin-top: 20px;
+      }
+
+      .delete-account button {
+        background-color: #e74c3c;
+        width: 100%;
+        padding: 10px;
+      }
+
+      .delete-account button:hover {
+        background-color: #a93225;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/" style="margin-right: 20px">Inicio</a>
+      <a href="/logout">Cerrar Sesión</a>
+    </header>
+
+    <h1>Bienvenido a tu cuenta, <%= user.name %>!</h1>
+    <p>Correo electrónico: <%= user.email %></p>
+    <p>Nombre de usuario: <%= user.username %></p>
+
+    <!-- Formulario para modificar la cuenta -->
+    <form action="/account/edit" method="POST">
+      <input
+        type="text"
+        name="username"
+        placeholder="Nuevo username"
+        value="<%= user.username %>"
+        required
+      />
+      <input
+        type="text"
+        name="name"
+        placeholder="Nuevo nombre"
+        value="<%= user.name %>"
+        required
+      />
+      <input
+        type="email"
+        name="email"
+        placeholder="Nuevo correo electrónico"
+        value="<%= user.email %>"
+        required
+      />
+      <input
+        type="password"
+        name="password"
+        placeholder="Nueva contraseña (opcional)"
+      />
+      <button type="submit">Actualizar cuenta</button>
+    </form>
+
+    <!-- Formulario para eliminar la cuenta -->
+    <div class="delete-account">
+      <h2>Eliminar cuenta</h2>
+      <form action="/account/delete" method="POST">
+        <button type="submit">Eliminar mi cuenta</button>
+      </form>
+    </div>
+  </body>
+</html>
