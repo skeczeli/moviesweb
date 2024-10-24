@@ -20,9 +20,12 @@
     </ul>
     <h3>Escrita por:</h3>
     <ul>
-      <% movie.writers.forEach(function(writer) { %>
+      <% if (movie.writers && movie.writers.length > 0) { %> <%
+      movie.writers.forEach(function(writer) { %>
       <li><%= writer.crew_member_name %></li>
-      <% }); %>
+      <% }); %> <% } else { %>
+      <li>No hay escritores disponibles</li>
+      <% } %>
     </ul>
     <h3>Argumento:</h3>
     <div id="overview"><p><%= movie.overview %></p></div>

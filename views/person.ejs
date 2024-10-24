@@ -19,6 +19,8 @@
       <li><a href="/pelicula/<%= movie.movie_id %>"><%= movie.title %></a></li>
       <% }); %>
     </ul>
+    <% } else { %>
+    <p>No tiene películas como actor</p>
     <% } %>
     <h2>Películas como director</h2>
     <% if (directorMovies.length > 0) { %>
@@ -27,6 +29,8 @@
       <li><a href="/pelicula/<%= movie.movie_id %>"><%= movie.title %></a></li>
       <% }); %>
     </ul>
+    <% } else { %>
+    <p>No tiene películas como director</p>
     <% } %> <% } %>
   </body>
 </html>
