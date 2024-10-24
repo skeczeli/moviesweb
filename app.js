@@ -42,6 +42,13 @@ app.get("/auth_user", (req, res) => {
   res.render("auth_user"); // Renderiza la vista auth_user.ejs
 });
 
+app.get("/mod_rev", (req, res) => {
+  const user_id = req.cookies.user_id;
+
+  // Renderizar la vista de "users" con el valor de user_id (si está presente)
+  res.render("mod_rev", { user_id });
+});
+
 app.get("/account", (req, res) => {
   const user_id = req.cookies.user_id;
 
@@ -64,6 +71,87 @@ app.get("/account", (req, res) => {
 app.get("/logout", (req, res) => {
   res.clearCookie("user_id"); // Elimina la cookie
   res.redirect("/"); // Redirigir a la página de inicio
+});
+
+app.post("/mod_rev/edit", (req, res) => {
+  const user_id = req.cookies.user_id; // Obtener el user_id de la cookie
+  const { movie_id, review, rating } = req.body; // Obtener los datos del formulario
+
+  if (!user_id) {
+    return res.redirect("/auth_user"); // Redirigir si el usuario no está autenticado
+  }
+
+  // Primero verificamos si existe una reseña para la película y usuario en cuestión
+  const checkReviewQuery = `
+    SELECT * FROM movie_user WHERE user_id = ? AND movie_id = ?
+  `;
+
+  db.get(checkReviewQuery, [user_id, movie_id], (err, existingReview) => {
+    if (err) {
+      console.error("Error al verificar la reseña:", err.message);
+      return res.send("Error al verificar la reseña.");
+    }
+
+    if (!existingReview) {
+      // Si no se encuentra una reseña, enviar mensaje de error
+      return res.send("No tienes una reseña para esta película.");
+    }
+
+    // Si existe la reseña, proceder a actualizarla
+    const updateReviewQuery = `
+      UPDATE movie_user
+      SET review = ?, rating = ?
+      WHERE user_id = ? AND movie_id = ?
+    `;
+
+    db.run(
+      updateReviewQuery,
+      [review, rating, user_id, movie_id],
+      function (err) {
+        if (err) {
+          console.error("Error al actualizar la reseña:", err.message);
+          return res.send("Error al actualizar la reseña.");
+        }
+        res.redirect("/account"); // Redirigir a la cuenta después de actualizar
+      }
+    );
+  });
+});
+
+app.post("/mod_rev/delete", (req, res) => {
+  const user_id = req.cookies.user_id;
+  const { movie_id } = req.body;
+
+  if (!user_id) {
+    return res.redirect("/auth_user");
+  }
+
+  const checkReviewQuery = `
+    SELECT * FROM movie_user WHERE user_id = ? AND movie_id = ?
+  `;
+
+  db.get(checkReviewQuery, [user_id, movie_id], (err, existingReview) => {
+    if (err) {
+      console.error("Error al verificar la reseña:", err.message);
+      return res.send("Error al verificar la reseña.");
+    }
+
+    if (!existingReview) {
+      return res.send("No tienes una reseña para esta película.");
+    }
+
+    const deleteReviewQuery = `
+      DELETE FROM movie_user WHERE user_id = ? AND movie_id = ?
+    `;
+
+    db.run(deleteReviewQuery, [user_id, movie_id], function (err) {
+      if (err) {
+        console.error("Error al eliminar la reseña:", err.message);
+        return res.send("Error al eliminar la reseña.");
+      }
+      res.redirect("/account");
+    });
+  });
 });
 
 app.post("/account/delete", (req, res) => {
@@ -157,7 +245,10 @@ app.post("/account/review", (req, res) => {
     [user_id, movie_id, rating, review],
     function (err) {
       if (err) {
-        console.error(err.message);
+        if (err.code === "SQLITE_CONSTRAINT") {
+          // Código de error para duplicado en MySQL
+          return res.send("Ya has dejado una reseña para esta película.");
+        }
         return res.send("Error al publicar la reseña.");
       }
 

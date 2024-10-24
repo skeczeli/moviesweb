@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang="eng">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mi Cuenta</title>
+    <title>Modificar Reseña</title>
     <style>
       body {
         font-family: "Arial", sans-serif;
@@ -79,7 +78,7 @@
       }
 
       input[type="number"] {
-        width: 25%;
+        width: 70%;
       }
 
       select {
@@ -91,69 +90,61 @@
         height: 100px;
         margin-bottom: -5px;
       }
-
-      .delete-account button {
-        background-color: #e74c3c;
-        width: 100%;
-        padding: 10px;
-      }
-
-      .delete-account button:hover {
-        background-color: #a93225;
-      }
     </style>
   </head>
   <body>
     <header>
       <a href="/" style="margin-right: 20px">Inicio</a>
       <a href="/users" style="margin-right: 20px">User Search</a>
-      <a href="/logout">Cerrar Sesión</a>
+      <a href="/account">Mi cuenta</a>
     </header>
+    <h2>Película de reseña a cambiar</h2>
 
-    <h1>Bienvenido a tu cuenta, <%= user.name %>!</h1>
-    <p>Correo electrónico: <%= user.email %></p>
-    <p>Nombre de usuario: <%= user.username %></p>
+    <!-- Formulario para modificar la reseña -->
+    <form action="/mod_rev/edit" method="POST">
+      <input
+        type="text"
+        id="movie-search"
+        placeholder="Título de la película..."
+        style="width: 300px"
+        name="movie_title"
+      />
+      <select id="movie-select" name="movie_id" style="width: 200px" required>
+        <option value="">Elige la película...</option>
+      </select>
+      <br /><br />
+      <textarea
+        name="review"
+        placeholder="Escribe tu nueva reseña..."
+        required
+      ></textarea>
+      <br /><br />
+      <input
+        type="number"
+        name="rating"
+        placeholder="Calificación (1-5)"
+        min="1"
+        max="5"
+        step="0.1"
+        required
+      />
+      <br /><br />
+      <button type="submit">Actualizar la reseña</button>
+    </form>
 
-    <!-- Formulario para crear review -->
-    <div style="margin-top: 20px">
-      <h2>Dejar una reseña</h2>
-      <form action="/account/review" method="POST">
-        <input
-          type="text"
-          id="movie-search"
-          placeholder="Título de la película..."
-        />
-
-        <!-- Lista desplegable de películas filtradas -->
-        <select id="movie-select" name="movie_id" required>
-          <option value="">Elige la película...</option>
-        </select>
-
-        <br /><br />
-        <textarea
-          name="review"
-          placeholder="Escribe tu reseña aquí..."
-          required
-        ></textarea>
-        <br /><br />
-        <label for="rating">Calificación (1-5):</label>
-        <input
-          type="number"
-          name="rating"
-          min="1"
-          max="5"
-          step="0.1"
-          placeholder="Calificación (1-5)"
-          required
-        />
-        <br /><br />
-        <button type="submit">Enviar reseña</button>
-      </form>
-    </div>
+    <!-- Formulario para eliminar la reseña -->
+    <form action="/mod_rev/delete" method="POST">
+      <!-- Campo oculto para película seleccionada -->
+      <input type="hidden" id="movie-select-hidden" name="movie_id" required />
+      <button style="background-color: #e74c3c" type="submit">
+        Eliminar mi reseña
+      </button>
+    </form>
 
     <script>
       const movieSearchInput = document.getElementById("movie-search");
       const movieSelect = document.getElementById("movie-select");
+      const movieSelectHidden = document.getElementById("movie-select-hidden");
 
       movieSearchInput.addEventListener("input", function () {
         const query = movieSearchInput.value;
@@ -179,48 +170,11 @@
             '<option value="">Selecciona una película...</option>';
         }
       });
+
+      // Sincronizar la selección de película con el input oculto
+      movieSelect.addEventListener("change", function () {
+        movieSelectHidden.value = movieSelect.value;
+      });
     </script>
-
-    <h2><a href="/mod_rev">Modificar reseñas</a></h2>
-
-    <h2>Modificar datos</h2>
-    <!-- Formulario para modificar la cuenta -->
-    <form action="/account/edit" method="POST">
-      <input
-        type="text"
-        name="username"
-        placeholder="Nuevo username"
-        value="<%= user.username %>"
-        required
-      />
-      <input
-        type="text"
-        name="name"
-        placeholder="Nuevo nombre"
-        value="<%= user.name %>"
-        required
-      />
-      <input
-        type="email"
-        name="email"
-        placeholder="Nuevo correo electrónico"
-        value="<%= user.email %>"
-        required
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Nueva contraseña (opcional)"
-      />
-      <button type="submit">Actualizar mi cuenta</button>
-    </form>
-
-    <!-- Formulario para eliminar la cuenta -->
-    <div class="delete-account">
-      <h2>Eliminar usuario</h2>
-      <form action="/account/delete" method="POST">
-        <button type="submit">Eliminar mi cuenta</button>
-      </form>
-    </div>
   </body>
 </html>
