@@ -34,6 +34,32 @@ app.get("/users", (req, res) => {
   res.render("users", { user_id });
 });
 
+app.get("/user/:id", (req, res) => {
+  const user_id = req.params.id;
+
+  // Consulta SQL para obtener los detalles del usuario y sus reseñas
+  const query = `
+    SELECT users.user_id, users.username, users.name, users.email, 
+           movie_user.review, movie_user.rating, movie.movie_id, movie.title
+    FROM users
+    JOIN movie_user ON users.user_id = movie_user.user_id
+    JOIN movie ON movie_user.movie_id = movie.movie_id
+    WHERE users.user_id = ?
+  `;
+
+  // Ejecutar la consulta
+  db.all(query, [user_id], (err, userReviews) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send("Error al cargar los datos del usuario.");
+    } else if (userReviews.length === 0) {
+      res.status(404).send("Usuario no encontrado o sin reseñas.");
+    } else {
+      res.render("user", { user: userReviews[0], reviews: userReviews });
+    }
+  });
+});
+
 app.get("/admin", (req, res) => {
   res.render("admin");
 });
@@ -407,6 +433,49 @@ app.get("/buscarKeyword", (req, res) => {
     // Renderizar los resultados en la vista
     res.render("keywords_result", {
       movies: movies,
+    });
+  });
+});
+
+app.get("/buscarUsers", (req, res) => {
+  const searchTerm = req.query.q;
+
+  // Consulta para buscar usuarios por nombre de usuario
+  const queryUsers = `
+    SELECT user_id, username, name
+    FROM users
+    WHERE username LIKE ?`;
+
+  const queryReviewedMovies = `
+    SELECT movie.movie_id, movie.title, users.username, users.user_id, movie_user.rating, movie_user.review
+    FROM movie_user
+    JOIN movie ON movie_user.movie_id = movie.movie_id
+    join users on movie_user.user_id = users.user_id
+    WHERE movie.title LIKE ?`;
+
+  const searchValue = [`%${searchTerm}%`];
+
+  // Ejecutar la consulta para buscar usuarios
+  db.all(queryUsers, searchValue, (err, users) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send("Error en la búsqueda de usuarios.");
+      return;
+    }
+
+    // Ejecutar la consulta para buscar películas reseñadas por los usuarios
+    db.all(queryReviewedMovies, searchValue, (err, movies) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Error en la búsqueda de películas.");
+        return;
+      }
+
+      // Renderizar los resultados en la vista
+      res.render("users_result", {
+        users: users,
+        movies: movies,
+      });
     });
   });
 });

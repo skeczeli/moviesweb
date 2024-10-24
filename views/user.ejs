@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= user.username %></title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/" style="margin-right: 20px">Inicio</a>
+      <a href="/users">User Search</a>
+    </header>
+    <h1>Reseñas por <%= user.username %></h1>
+    <ul>
+      <% reviews.forEach(function(review) { %>
+      <li>
+        <a href="/pelicula/<%= review.movie_id %>"><%= review.title %></a>
+        <br />
+        <%= review.review %>
+        <br />
+        Puntuación: <%= review.rating %>
+        <br />
+        <br />
+      </li>
+      <% }); %>
+    </ul>
+  </body>
+</html>

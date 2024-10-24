@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Resultado de la Búsqueda</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/" style="margin-right: 20px">Inicio</a>
+      <a href="/users">User Search</a>
+    </header>
+    <h1>Resultado de la Búsqueda</h1>
+
+    <% if (movies.length === 0 && users.length === 0) { %>
+    <p>No hay resultados.</p>
+    <% } else { %>
+    <h2>Usuarios</h2>
+    <% if (users.length > 0) { %>
+    <ul>
+      <% users.forEach((user) => { %>
+      <li><a href="/user/<%= user.user_id %>"><%= user.username %></a></li>
+      <% }); %>
+    </ul>
+    <% } else { %>
+    <p>No hay resultados.</p>
+    <% } %>
+    <br />
+    <h2>Películas</h2>
+    <% if (movies.length > 0) { %>
+    <ul style="margin-top: -5px">
+      <% let lastMovieID = null; %>
+      <!-- Variable de control para la película -->
+      <% movies.forEach(function(movie) { %> <% if (movie.movie_id !==
+      lastMovieID) { %>
+      <!-- Mostrar el nombre de la película solo la primera vez -->
+      <li><a href="/pelicula/<%= movie.movie_id %>"><%= movie.title %></a></li>
+      <% lastMovieID = movie.movie_id; %>
+      <!-- Actualizar el ID de movie -->
+      <% } %>
+      <!-- Mostrar cada reseña de la película -->
+      <li style="margin-left: 20px">
+        Usuario:<a href="/user/<%= movie.user_id %>"> <%= movie.username %></a>
+        <br />
+        Reseña: <%= movie.review %>
+        <br />
+        Puntuación: <%= movie.rating %>
+        <br />
+        <br />
+      </li>
+      <% }); %>
+    </ul>
+    <% } else { %>
+    <p>No hay resultados.</p>
+    <% } %> <% } %>
+  </body>
+</html>
