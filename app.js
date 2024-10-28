@@ -414,7 +414,7 @@ app.get("/buscarKeyword", (req, res) => {
 
   // Consulta para buscar películas por palabra clave
   const queryMoviesByKeyword = `
-    SELECT distinct movie.movie_id, movie.title, movie.release_date
+    SELECT distinct movie.movie_id, movie.title, movie.release_date, keyword_name
     FROM movie 
     JOIN movie_keywords ON movie.movie_id = movie_keywords.movie_id
     JOIN keyword ON movie_keywords.keyword_id = keyword.keyword_id
@@ -433,6 +433,7 @@ app.get("/buscarKeyword", (req, res) => {
     // Renderizar los resultados en la vista
     res.render("keywords_result", {
       movies: movies,
+      searchTerm: searchTerm,
     });
   });
 });

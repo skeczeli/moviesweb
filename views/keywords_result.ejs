@@ -14,7 +14,7 @@
   <body>
     <div id="inicio"><a href="/">Inicio</a></div>
     <div id="content">
-      <h1>Resultados de la búsqueda por palabra clave</h1>
+      <h1>Resultados de "<%= searchTerm %>"</h1>
 
       <% if (movies.length > 0) { %>
       <ul>
@@ -23,8 +23,7 @@
           <a href="/pelicula/<%= movie.movie_id %>"
             ><strong><%= movie.title %></strong></a
           >
-          (<%= movie.release_date %>)
-          <p><%= movie.overview %></p>
+          (<%= movie.release_date %>) - <%= movie.keyword_name %>
         </li>
         <% }) %>
       </ul>
