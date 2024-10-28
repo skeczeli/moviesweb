@@ -60,10 +60,6 @@ app.get("/user/:id", (req, res) => {
   });
 });
 
-app.get("/admin", (req, res) => {
-  res.render("admin");
-});
-
 app.get("/auth_user", (req, res) => {
   res.render("auth_user"); // Renderiza la vista auth_user.ejs
 });
