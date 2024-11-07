@@ -373,7 +373,7 @@ app.post("/auth", (req, res) => {
 app.get("/buscar", (req, res) => {
   const searchTerm = req.query.q;
 
-  if (searchTerm || searchTerm.trim() === "") {
+  if (searchTerm.trim() === "") {
     return res.render("index"); // Redirige o renderiza la página principal sin hacer nada
   }
 
@@ -427,7 +427,7 @@ app.get("/buscar", (req, res) => {
 app.get("/buscarKeyword", (req, res) => {
   const searchTerm = req.query.q;
 
-  if (searchTerm || searchTerm.trim() === "") {
+  if (searchTerm.trim() === "") {
     return res.render("index"); // Redirige o renderiza la página principal sin hacer nada
   }
 
