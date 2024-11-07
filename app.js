@@ -17,7 +17,22 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // Path completo de la base de datos movies.db
 // Por ejemplo 'C:\\Users\\datagrip\\movies.db'
-const db = new sqlite3.Database("movies.db");
+const db = new sqlite3.Database("movies.db", (err) => {
+  if (err) {
+    console.error("Error al conectar a la base de datos:", err.message);
+    return;
+  }
+  console.log("Conectado a la base de datos.");
+
+  // Activar las foreign keys y delete on cascade
+  db.run("PRAGMA foreign_keys = ON", (err) => {
+    if (err) {
+      console.error("Error al activar las Foreign Keys:", err.message);
+    } else {
+      console.log("Foreign Keys activadas.");
+    }
+  });
+});
 
 // Configurar el motor de plantillas EJS
 app.set("view engine", "ejs");
@@ -37,13 +52,13 @@ app.get("/users", (req, res) => {
 app.get("/user/:id", (req, res) => {
   const user_id = req.params.id;
 
-  // Consulta SQL para obtener los detalles del usuario y sus reseñas
+  // Consulta SQL con LEFT JOIN para obtener los detalles del usuario y sus reseñas (si existen)
   const query = `
     SELECT users.user_id, users.username, users.name, users.email, 
            movie_user.review, movie_user.rating, movie.movie_id, movie.title
     FROM users
-    JOIN movie_user ON users.user_id = movie_user.user_id
-    JOIN movie ON movie_user.movie_id = movie.movie_id
+    LEFT JOIN movie_user ON users.user_id = movie_user.user_id
+    LEFT JOIN movie ON movie_user.movie_id = movie.movie_id
     WHERE users.user_id = ?
   `;
 
@@ -53,9 +68,21 @@ app.get("/user/:id", (req, res) => {
       console.error(err);
       res.status(500).send("Error al cargar los datos del usuario.");
     } else if (userReviews.length === 0) {
-      res.status(404).send("Usuario no encontrado o sin reseñas.");
+      res.status(404).send("Usuario no encontrado.");
     } else {
-      res.render("user", { user: userReviews[0], reviews: userReviews });
+      // Si el usuario existe pero no tiene reseñas
+      const user = {
+        user_id: userReviews[0].user_id,
+        username: userReviews[0].username,
+        name: userReviews[0].name,
+        email: userReviews[0].email,
+      };
+
+      // Filtrar las reseñas que no son nulas (en caso de que no haya reseñas)
+      const reviews = userReviews.filter((review) => review.movie_id !== null);
+
+      // Renderizar la vista con los detalles del usuario y sus reseñas (si existen)
+      res.render("user", { user: user, reviews: reviews });
     }
   });
 });
@@ -187,26 +214,14 @@ app.post("/account/delete", (req, res) => {
   db.run(`DELETE FROM users WHERE user_id = ?`, [user_id], function (err) {
     if (err) {
       console.error(err.message);
-      return res.send("Error al eliminar la cuenta.");
+      return res.send("Error al eliminar el usuario.");
     }
 
-    // Eliminar el usuario de la tabla user_login
-    db.run(
-      `DELETE FROM user_login WHERE user_id = ?`,
-      [user_id],
-      function (err) {
-        if (err) {
-          console.error(err.message);
-          return res.send("Error al eliminar los datos de login.");
-        }
+    // Borrar la cookie de la sesión
+    res.clearCookie("user_id");
 
-        // Borrar la cookie de la sesión
-        res.clearCookie("user_id");
-
-        // Redirigir a la página principal
-        res.redirect("/");
-      }
-    );
+    // Redirigir a la página principal
+    res.redirect("/");
   });
 });
 
@@ -357,6 +372,10 @@ app.post("/auth", (req, res) => {
 
 app.get("/buscar", (req, res) => {
   const searchTerm = req.query.q;
+
+  if (searchTerm || searchTerm.trim() === "") {
+    return res.render("index"); // Redirige o renderiza la página principal sin hacer nada
+  }
 
   const queryMovies = `SELECT movie_id, title FROM movie WHERE title LIKE ?`;
   const queryActors = `SELECT distinct person.person_id, person.person_name, movie.movie_id, movie.title 

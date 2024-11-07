@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= user.username %></title>
+    <meta charset="UTF-8" />
+    <title>Perfil del Usuario</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header>
       <a href="/" style="margin-right: 20px">Inicio</a>
-      <a href="/users">User Search</a>
+      <a href="/users" style="margin-right: 20px">User Search</a>
     </header>
-    <h1>Reseñas por <%= user.username %></h1>
+    <h1>Perfil del Usuario</h1>
+    <h2>Reseñas de <%= user.username %></h2>
+    <% if (reviews.length === 0) { %>
+    <p>Este usuario no tiene reseñas.</p>
+    <% } else { %>
     <ul>
       <% reviews.forEach(function(review) { %>
       <li>
@@ -18,10 +23,10 @@
         <%= review.review %>
         <br />
         Puntuación: <%= review.rating %>
-        <br />
-        <br />
+        <br /><br />
       </li>
       <% }); %>
     </ul>
+    <% } %>
   </body>
 </html>
