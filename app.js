@@ -427,6 +427,10 @@ app.get("/buscar", (req, res) => {
 app.get("/buscarKeyword", (req, res) => {
   const searchTerm = req.query.q;
 
+  if (searchTerm || searchTerm.trim() === "") {
+    return res.render("index"); // Redirige o renderiza la página principal sin hacer nada
+  }
+
   // Consulta para buscar películas por palabra clave
   const queryMoviesByKeyword = `
     SELECT distinct movie.movie_id, movie.title, movie.release_date, keyword_name
