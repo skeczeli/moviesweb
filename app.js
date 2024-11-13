@@ -8,10 +8,10 @@ const bcrypt = require("bcrypt"); // hashing
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Serve static files from the "views" directory
+// Traer archivos estáticos desde el directorio "views"
 app.use(express.static("views"));
 
-// Middleware for parsing cookies and form data
+// Middleware para cookies y datos de formularios
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -70,7 +70,6 @@ app.get("/user/:id", (req, res) => {
     } else if (userReviews.length === 0) {
       res.status(404).send("Usuario no encontrado.");
     } else {
-      // Si el usuario existe pero no tiene reseñas
       const user = {
         user_id: userReviews[0].user_id,
         username: userReviews[0].username,
@@ -78,11 +77,15 @@ app.get("/user/:id", (req, res) => {
         email: userReviews[0].email,
       };
 
-      // Filtrar las reseñas que no son nulas (en caso de que no haya reseñas)
+      // Filtrar las reseñas que no son nulas
       const reviews = userReviews.filter((review) => review.movie_id !== null);
 
       // Renderizar la vista con los detalles del usuario y sus reseñas (si existen)
-      res.render("user", { user: user, reviews: reviews });
+      res.render("user", {
+        user_id: req.cookies.user_id || null,
+        user: user,
+        reviews: reviews,
+      });
     }
   });
 });
@@ -102,7 +105,7 @@ app.get("/account", (req, res) => {
   const user_id = req.cookies.user_id;
 
   if (!user_id) {
-    return res.redirect("/auth_user"); // Redirigir si no hay sesión
+    return res.redirect("/auth_user"); // Redirigir si no hay sesión (mirando la cookie)
   }
 
   // Obtener los detalles del usuario
@@ -112,16 +115,17 @@ app.get("/account", (req, res) => {
       return res.redirect("/auth_user");
     }
 
-    // Renderizar la vista de cuenta con los datos del usuario
+    // Renderizar la vista de account con los datos del usuario
     res.render("account", { user });
   });
 });
 
 app.get("/logout", (req, res) => {
   res.clearCookie("user_id"); // Elimina la cookie
-  res.redirect("/"); // Redirigir a la página de inicio
+  res.redirect("/users"); // Redirigir a la página de inicio
 });
 
+// para editar reseñas
 app.post("/mod_rev/edit", (req, res) => {
   const user_id = req.cookies.user_id; // Obtener el user_id de la cookie
   const { movie_id, review, rating } = req.body; // Obtener los datos del formulario
@@ -130,7 +134,7 @@ app.post("/mod_rev/edit", (req, res) => {
     return res.redirect("/auth_user"); // Redirigir si el usuario no está autenticado
   }
 
-  // Primero verificamos si existe una reseña para la película y usuario en cuestión
+  // Verificar si existe una reseña para la película y usuario dados
   const checkReviewQuery = `
     SELECT * FROM movie_user WHERE user_id = ? AND movie_id = ?
   `;
@@ -167,6 +171,7 @@ app.post("/mod_rev/edit", (req, res) => {
   });
 });
 
+// para borrar una reseña (para una película y usuario dados)
 app.post("/mod_rev/delete", (req, res) => {
   const user_id = req.cookies.user_id;
   const { movie_id } = req.body;
@@ -203,6 +208,7 @@ app.post("/mod_rev/delete", (req, res) => {
   });
 });
 
+// para borrar una cuenta
 app.post("/account/delete", (req, res) => {
   const user_id = req.cookies.user_id; // Obtener el user_id de la cookie
 
@@ -221,10 +227,11 @@ app.post("/account/delete", (req, res) => {
     res.clearCookie("user_id");
 
     // Redirigir a la página principal
-    res.redirect("/");
+    res.redirect("/users");
   });
 });
 
+// para modificar una cuenta -> se edita todo "a la vez" pero se hace autocomplete con los datos actuales por si no se quieren cambiar.
 app.post("/account/edit", (req, res) => {
   const user_id = req.cookies.user_id; // Obtener el user_id de la cookie
   const { username, name, email, password } = req.body; // Obtener los datos del formulario
@@ -268,6 +275,7 @@ app.post("/account/edit", (req, res) => {
   );
 });
 
+// dejar una reseña
 app.post("/account/review", (req, res) => {
   const user_id = req.cookies.user_id; // Obtener el user_id de la cookie
   const { review, rating, movie_id } = req.body; // Obtener los datos del formulario
@@ -370,6 +378,7 @@ app.post("/auth", (req, res) => {
   }
 });
 
+// para buscar películas, actores y/o director
 app.get("/buscar", (req, res) => {
   const searchTerm = req.query.q;
 
@@ -415,6 +424,7 @@ app.get("/buscar", (req, res) => {
 
         // Enviar todos los resultados a la vista
         res.render("resultado", {
+          searchTerm: searchTerm,
           movies: movies,
           actors: actors,
           directors: directors,
@@ -424,6 +434,7 @@ app.get("/buscar", (req, res) => {
   });
 });
 
+// búsqueda de palabras clave
 app.get("/buscarKeyword", (req, res) => {
   const searchTerm = req.query.q;
 
@@ -433,11 +444,14 @@ app.get("/buscarKeyword", (req, res) => {
 
   // Consulta para buscar películas por palabra clave
   const queryMoviesByKeyword = `
-    SELECT distinct movie.movie_id, movie.title, movie.release_date, keyword_name
-    FROM movie 
-    JOIN movie_keywords ON movie.movie_id = movie_keywords.movie_id
-    JOIN keyword ON movie_keywords.keyword_id = keyword.keyword_id
-    WHERE keyword.keyword_name LIKE ?`;
+  SELECT DISTINCT movie.movie_id, movie.title, movie.release_date, 
+         GROUP_CONCAT(keyword.keyword_name, ', ') AS keywords
+  FROM movie 
+  JOIN movie_keywords ON movie.movie_id = movie_keywords.movie_id
+  JOIN keyword ON movie_keywords.keyword_id = keyword.keyword_id
+  WHERE keyword.keyword_name LIKE ?
+  GROUP BY movie.movie_id, movie.title, movie.release_date
+`;
 
   const searchValue = [`%${searchTerm}%`];
 
@@ -457,6 +471,7 @@ app.get("/buscarKeyword", (req, res) => {
   });
 });
 
+// búsqueda de usuarios
 app.get("/buscarUsers", (req, res) => {
   const searchTerm = req.query.q;
 
@@ -493,6 +508,7 @@ app.get("/buscarUsers", (req, res) => {
 
       // Renderizar los resultados en la vista
       res.render("users_result", {
+        user_id: req.cookies.user_id || null,
         users: users,
         movies: movies,
       });
@@ -500,6 +516,7 @@ app.get("/buscarUsers", (req, res) => {
   });
 });
 
+// empleado para seleccionar la película a reseñar, para asociar a un id específico de manera correcta
 app.get("/buscar-pelicula", (req, res) => {
   const searchTerm = req.query.q;
 
@@ -720,7 +737,7 @@ app.get("/pelicula/:id", (req, res) => {
   });
 });
 
-// Ruta para manejar actores y directores por su ID
+// Ruta para manejar personas (actores y/o directores) por su ID
 app.get("/person/:id", (req, res) => {
   const personId = req.params.id;
 
@@ -789,66 +806,6 @@ app.get("/person/:id", (req, res) => {
         });
       });
     });
-  });
-});
-
-// Ruta para mostrar la página de un actor específico
-app.get("/actor/:id", (req, res) => {
-  const actorId = req.params.id;
-
-  // Consulta SQL para obtener las películas en las que participó el actor
-  const query = `
-    SELECT DISTINCT
-      person.person_name as actorName,
-      movie.*
-    FROM movie
-    INNER JOIN movie_cast ON movie.movie_id = movie_cast.movie_id
-    INNER JOIN person ON person.person_id = movie_cast.person_id
-    WHERE movie_cast.person_id = ?;
-  `;
-
-  // Ejecutar la consulta
-  db.all(query, [actorId], (err, movies) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send("Error al cargar las películas del actor.");
-    } else {
-      // Obtener el nombre del actor
-      const actorName = movies.length > 0 ? movies[0].actorName : "";
-
-      res.render("actor", { actorName, movies });
-    }
-  });
-});
-
-// Ruta para mostrar la página de un director específico
-app.get("/director/:id", (req, res) => {
-  const directorId = req.params.id;
-
-  // Consulta SQL para obtener las películas dirigidas por el director
-  const query = `
-    SELECT DISTINCT
-      person.person_name as directorName,
-      movie.*
-    FROM movie
-    INNER JOIN movie_crew ON movie.movie_id = movie_crew.movie_id
-    INNER JOIN person ON person.person_id = movie_crew.person_id
-    WHERE movie_crew.job = 'Director' AND movie_crew.person_id = ?;
-  `;
-
-  // console.log('query = ', query)
-
-  // Ejecutar la consulta
-  db.all(query, [directorId], (err, movies) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send("Error al cargar las películas del director.");
-    } else {
-      // console.log('movies.length = ', movies.length)
-      // Obtener el nombre del director
-      const directorName = movies.length > 0 ? movies[0].directorName : "";
-      res.render("director", { directorName, movies });
-    }
   });
 });
 

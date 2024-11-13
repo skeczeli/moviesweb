@@ -8,7 +8,14 @@
   <body>
     <header>
       <a href="/" style="margin-right: 20px">Inicio</a>
-      <a href="/users" style="margin-right: 20px">User Search</a>
+      <% if (user_id) { %>
+      <!-- Si el usuario ha iniciado sesión, mostrar "Mi Cuenta" -->
+      <a href="/account" style="margin-right: 20px">Mi Cuenta</a>
+      <a href="/logout">Cerrar Sesión</a>
+      <% } else { %>
+      <!-- Si no ha iniciado sesión, mostrar "Iniciar Sesión" -->
+      <a href="/auth_user" style="margin-right: 20px">Iniciar Sesión</a>
+      <% } %>
     </header>
     <h1>Perfil del Usuario</h1>
     <h2>Reseñas de <%= user.username %></h2>

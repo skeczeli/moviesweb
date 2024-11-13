@@ -107,12 +107,12 @@
     <header>
       <a href="/" style="margin-right: 20px">Inicio</a>
       <a href="/users" style="margin-right: 20px">User Search</a>
-      <a href="/logout">Cerrar Sesión</a>
+      <a href="/logout" style="margin-right: 20px">Cerrar Sesión</a>
     </header>
 
     <h1>Bienvenido a tu cuenta, <%= user.name %>!</h1>
-    <p>Correo electrónico: <%= user.email %></p>
     <p>Nombre de usuario: <%= user.username %></p>
+    <p>Correo electrónico: <%= user.email %></p>
 
     <!-- Formulario para crear review -->
     <div style="margin-top: 20px">
@@ -159,6 +159,7 @@
         const query = movieSearchInput.value;
 
         if (query.length >= 2) {
+          // si no da al menos 2 characters no acepta la query
           fetch(`/buscar-pelicula?q=${encodeURIComponent(query)}`)
             .then((response) => response.json())
             .then((data) => {

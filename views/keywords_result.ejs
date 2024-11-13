@@ -13,7 +13,8 @@
   </head>
   <body>
     <header>
-      <div id="inicio"><a href="/">Inicio</a></div>
+      <a href="/" style="margin-right: 20px">Inicio</a>
+      <a href="/users" style="margin-right: 20px">User Search</a>
     </header>
     <div id="content">
       <h1>Resultados de "<%= searchTerm %>"</h1>
@@ -22,10 +23,10 @@
       <ul>
         <% movies.forEach(function(movie) { %>
         <li>
-          <a href="/pelicula/<%= movie.movie_id %>"
-            ><strong><%= movie.title %></strong></a
-          >
-          (<%= movie.release_date %>) - <%= movie.keyword_name %>
+          <a href="/pelicula/<%= movie.movie_id %>">
+            <strong><%= movie.title %></strong>
+          </a>
+          (<%= movie.release_date %>) - <%= movie.keywords %>
         </li>
         <% }) %>
       </ul>
