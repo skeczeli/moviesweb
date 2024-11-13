@@ -1,0 +1,15 @@
+Grupo 8
+
+Integrantes:
+
+- Sofía Keczeli
+- Juan Luis Martinó
+
+Archivos / directorios con nuestro código:
+
+- views (contiene las vistas creadas y explicadas en el informe + css)
+- app.js
+
+Informe (PDF): Informe - Grupo 8
+
+link al repositorio (por si es necesario tener la estructura completa, para correr la página): https://github.com/skeczeli/moviesweb
