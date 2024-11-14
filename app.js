@@ -116,7 +116,7 @@ app.get("/account", (req, res) => {
     }
 
     // Renderizar la vista de account con los datos del usuario
-    res.render("account", { user });
+    res.render("account", { user_id: user_id, user: user });
   });
 });
 

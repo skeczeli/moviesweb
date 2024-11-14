@@ -182,7 +182,8 @@
       });
     </script>
 
-    <h2><a href="/mod_rev">Modificar reseñas</a></h2>
+    <h2><a href="/mod_rev">Modificar tus reseñas</a></h2>
+    <h2><a href="/user/<%= user_id %>">Ver tus reseñas</a></h2>
 
     <h2>Modificar datos</h2>
     <!-- Formulario para modificar la cuenta -->
@@ -219,7 +220,11 @@
     <!-- Formulario para eliminar la cuenta -->
     <div class="delete-account">
       <h2>Eliminar usuario</h2>
-      <form action="/account/delete" method="POST">
+      <form
+        action="/account/delete"
+        method="POST"
+        onsubmit="return confirm('¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.');"
+      >
         <button type="submit">Eliminar mi cuenta</button>
       </form>
     </div>
